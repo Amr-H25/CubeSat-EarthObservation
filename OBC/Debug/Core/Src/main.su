@@ -1,0 +1,9 @@
+../Core/Src/main.c:79:5:main	8	static
+../Core/Src/main.c:138:6:SystemClock_Config	72	static
+../Core/Src/main.c:175:13:MX_I2C1_Init	8	static
+../Core/Src/main.c:209:13:MX_SPI1_Init	8	static
+../Core/Src/main.c:247:13:MX_USART1_UART_Init	8	static
+../Core/Src/main.c:280:13:MX_GPIO_Init	32	static
+../Core/Src/main.c:316:6:process_SD_card	4240	static
+../Core/Src/main.c:354:6:test_SD_card	8824	static
+../Core/Src/main.c:482:6:Error_Handler	4	static,ignoring_inline_asm

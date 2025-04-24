@@ -1,0 +1,14 @@
+../Core/Src/mpu6050.c:36:16:MPU6050_Init	8
+../Core/Src/mpu6050.c:97:16:MPU6050_SetGyroScale	6
+../Core/Src/mpu6050.c:137:16:MPU6050_SetAccelScale	6
+../Core/Src/mpu6050.c:177:16:MPU6050_SetDLPF	1
+../Core/Src/mpu6050.c:186:16:MPU6050_ReadAllData	2
+../Core/Src/mpu6050.c:227:16:MPU6050_ReadAccelerometerData	2
+../Core/Src/mpu6050.c:255:16:MPU6050_ReadGyroscopeData	2
+../Core/Src/mpu6050.c:283:16:MPU6050_ReadTemperature	2
+../Core/Src/mpu6050.c:305:6:MPU6050_IsDataReady	2
+../Core/Src/mpu6050.c:321:16:MPU6050_Calibrate	3
+../Core/Src/mpu6050.c:358:6:MPU6050_Print	1
+../Core/Src/mpu6050.c:388:23:MPU6050_ReadRegister	1
+../Core/Src/mpu6050.c:404:23:MPU6050_ReadRegisters	1
+../Core/Src/mpu6050.c:419:23:MPU6050_WriteRegister	1

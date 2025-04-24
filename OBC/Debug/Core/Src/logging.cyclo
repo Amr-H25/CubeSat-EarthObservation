@@ -1,0 +1,5 @@
+../Core/Src/logging.c:20:6:Log_Init	1
+../Core/Src/logging.c:38:6:Log_SetFilename	1
+../Core/Src/logging.c:44:20:_log_level_to_string	6
+../Core/Src/logging.c:56:13:_get_timestamp	1
+../Core/Src/logging.c:81:6:Log_Write	9

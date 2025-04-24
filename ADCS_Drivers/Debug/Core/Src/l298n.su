@@ -1,0 +1,4 @@
+../Core/Src/l298n.c:11:6:L298N_Init	16	static
+../Core/Src/l298n.c:26:6:L298N_SetSpeed	24	static
+../Core/Src/l298n.c:38:6:L298N_SetDirection	16	static
+../Core/Src/l298n.c:85:6:L298N_StopMotor	16	static

@@ -1,0 +1,14 @@
+../Core/Src/main.c:90:6:PrintDebugMessage	16	static
+../Core/Src/main.c:97:6:TestGPSData	200	static
+../Core/Src/main.c:160:6:TestMPU6050Data	8	static
+../Core/Src/main.c:177:6:UpdateMotorControl	16	static
+../Core/Src/main.c:232:5:main	16	static
+../Core/Src/main.c:334:6:SystemClock_Config	88	static
+../Core/Src/main.c:378:13:MX_ADC1_Init	8	static
+../Core/Src/main.c:413:13:MX_I2C1_Init	8	static
+../Core/Src/main.c:447:13:MX_TIM4_Init	48	static
+../Core/Src/main.c:500:13:MX_USART1_UART_Init	8	static
+../Core/Src/main.c:533:13:MX_USART3_UART_Init	8	static
+../Core/Src/main.c:566:13:MX_GPIO_Init	32	static
+../Core/Src/main.c:599:6:HAL_UART_RxCpltCallback	16	static
+../Core/Src/main.c:613:6:Error_Handler	4	static,ignoring_inline_asm
