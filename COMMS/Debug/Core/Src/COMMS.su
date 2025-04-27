@@ -1,0 +1,2 @@
+../Core/Src/COMMS.c:14:17:compute_crc_ccitt	32	static
+../Core/Src/COMMS.c:32:6:COMMS_SendAX25	2376	static
