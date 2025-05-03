@@ -8,12 +8,12 @@
 
 #include "ldr.h"
 
-// ADC channel mapping
+// ADC channel mapping remains the same
 static const uint32_t SENSOR_CHANNELS[] = {
-    ADC_CHANNEL_1,  // Front
-    ADC_CHANNEL_2,  // Right
-    ADC_CHANNEL_3,  // Back
-    ADC_CHANNEL_4   // Left
+    LDR_FRONT_CHANNEL,
+    LDR_RIGHT_CHANNEL,
+    LDR_BACK_CHANNEL,
+    LDR_LEFT_CHANNEL
 };
 
 void LightSensor_Init(ADC_HandleTypeDef* hadc)
@@ -23,11 +23,11 @@ void LightSensor_Init(ADC_HandleTypeDef* hadc)
     // Enable GPIO Clock
     __HAL_RCC_GPIOA_CLK_ENABLE();
 
-    // Configure GPIO pins for analog input
-    GPIO_InitStruct.Pin = GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4;
+    // Configure GPIO pins for analog input using config.h definitions
+    GPIO_InitStruct.Pin = LDR_FRONT_PIN | LDR_RIGHT_PIN | LDR_BACK_PIN | LDR_LEFT_PIN;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    HAL_GPIO_Init(LDR_GPIO_PORT, &GPIO_InitStruct);
 }
 
 uint16_t LightSensor_ReadSingle(ADC_HandleTypeDef* hadc, LightSensor_Position position)
@@ -39,6 +39,9 @@ uint16_t LightSensor_ReadSingle(ADC_HandleTypeDef* hadc, LightSensor_Position po
     sConfig.Channel = SENSOR_CHANNELS[position];
     sConfig.Rank = ADC_REGULAR_RANK_1;
     sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
+
+    // Configure channel and make sure to reset any previous configuration
+    HAL_ADC_Stop(hadc);
     HAL_ADC_ConfigChannel(hadc, &sConfig);
 
     // Start ADC conversion

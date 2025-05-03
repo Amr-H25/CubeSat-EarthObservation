@@ -1,2 +1,2 @@
 ../Core/Src/lm35.c:9:6:LM35_Init	40	static
-../Core/Src/lm35.c:21:7:LM35_ReadTemperature	24	static
+../Core/Src/lm35.c:21:7:LM35_ReadTemperature	40	static

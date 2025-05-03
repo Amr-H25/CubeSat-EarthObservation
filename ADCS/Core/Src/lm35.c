@@ -10,7 +10,7 @@ void LM35_Init(ADC_HandleTypeDef* hadc)
 {
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
 
     GPIO_InitStruct.Pin = LM35_ADC_PIN;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
@@ -20,9 +20,20 @@ void LM35_Init(ADC_HandleTypeDef* hadc)
 
 float LM35_ReadTemperature(ADC_HandleTypeDef* hadc)
 {
+    ADC_ChannelConfTypeDef sConfig = {0};
     uint32_t adcValue = 0;
     float temperature;
 
+    // First stop any ongoing conversion
+    HAL_ADC_Stop(hadc);
+
+    // Configure for LM35 channel
+    sConfig.Channel = LM35_ADC_CHANNEL;
+    sConfig.Rank = ADC_REGULAR_RANK_1;
+    sConfig.SamplingTime = ADC_SAMPLETIME_55CYCLES_5;
+    HAL_ADC_ConfigChannel(hadc, &sConfig);
+
+    // Now read the value
     HAL_ADC_Start(hadc);
     HAL_ADC_PollForConversion(hadc, 100);
     adcValue = HAL_ADC_GetValue(hadc);
@@ -39,3 +50,4 @@ float LM35_ReadTemperature(ADC_HandleTypeDef* hadc)
 
     return temperature;
 }
+

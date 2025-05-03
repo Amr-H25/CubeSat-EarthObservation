@@ -9,6 +9,7 @@
 #define L298N_H
 
 #include "stm32f1xx_hal.h"
+#include "config.h"
 
 // Operation modes
 typedef enum {
@@ -29,11 +30,18 @@ typedef enum {
     MOTOR_B
 } Motor_Channel;
 
-// L298N handle structure
+// Add initialization structure
 typedef struct {
     TIM_HandleTypeDef* htim;
-    uint32_t channel_a;      // PWM channel for motor A
-    uint32_t channel_b;      // PWM channel for motor B
+    uint32_t channel_a;
+    uint32_t channel_b;
+    L298N_Mode mode;
+} L298N_InitTypeDef;
+
+typedef struct {
+    TIM_HandleTypeDef* htim;
+    uint32_t channel_a;
+    uint32_t channel_b;
     GPIO_TypeDef* in1_port;
     uint16_t in1_pin;
     GPIO_TypeDef* in2_port;
@@ -45,7 +53,7 @@ typedef struct {
     L298N_Mode mode;
 } L298N_HandleTypeDef;
 
-void L298N_Init(L298N_HandleTypeDef* hl298n);
+void L298N_Init(L298N_HandleTypeDef* hl298n, L298N_InitTypeDef* init);
 void L298N_SetSpeed(L298N_HandleTypeDef* hl298n, Motor_Channel channel, uint8_t speed);
 void L298N_SetDirection(L298N_HandleTypeDef* hl298n, Motor_Channel channel, Motor_Direction direction);
 void L298N_StopMotor(L298N_HandleTypeDef* hl298n, Motor_Channel channel);

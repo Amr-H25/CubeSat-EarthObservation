@@ -8,10 +8,8 @@
 #define LM35_H
 
 #include "stm32f1xx_hal.h"
+#include "config.h"
 
-// Pin definitions
-#define LM35_ADC_PORT     GPIOA
-#define LM35_ADC_PIN      GPIO_PIN_0    // PA0 - ADC1 Channel 0
 
 // Function prototypes
 void LM35_Init(ADC_HandleTypeDef* hadc);

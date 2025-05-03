@@ -9,6 +9,7 @@
 #define LIGHT_SENSOR_H
 
 #include "stm32f1xx_hal.h"
+#include "config.h"
 
 // Sensor positions
 typedef enum {

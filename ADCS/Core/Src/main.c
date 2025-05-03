@@ -1,30 +1,34 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2025 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "gps.h"
 #include "mpu6050.h"
-#include <stdio.h>
+#include "gps.h"
+#include "l298n.h"
+#include "ldr.h"
+#include "lm35.h"
 #include <string.h>
+#include <stdio.h>
+#include <math.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -34,8 +38,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define GPS_TEST_INTERVAL 1000  // Test interval in ms
-#define MPU6050_TEST_INTERVAL 500  // Test interval in ms for MPU6050
+#define SENSOR_READ_INTERVAL 1000
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -47,22 +50,21 @@
 ADC_HandleTypeDef hadc1;
 
 I2C_HandleTypeDef hi2c1;
+I2C_HandleTypeDef hi2c2;
 
 TIM_HandleTypeDef htim4;
 
 UART_HandleTypeDef huart1;
-UART_HandleTypeDef huart3;
+UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-char debug_buffer[256];    // Debug message buffer
-GPS_Handle gps_handle;
-MPU6050_Handle mpu6050_handle;
-uint32_t last_gps_test_time = 0;
-uint32_t last_mpu_test_time = 0;
-
-// Motor control parameters (will be replaced with PID controller later)
-uint16_t motor_x_pwm = 0;
-uint16_t motor_y_pwm = 0;
+LightSensor_Values ldr_values;
+L298N_HandleTypeDef hmotor;
+GPS_Handle hgps;
+MPU6050_Handle hmpu;
+float temperature = 0;
+uint32_t last_sensor_read = 0;
+char debug_buffer[256];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -71,157 +73,18 @@ static void MX_GPIO_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_TIM4_Init(void);
-static void MX_USART3_UART_Init(void);
 static void MX_I2C1_Init(void);
+static void MX_I2C2_Init(void);
+static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
-void PrintDebugMessage(const char* message);
-void TestGPSData(void);
-void TestMPU6050Data(void);
-void UpdateMotorControl(void);
+void UART_Print(float value);
+void UART_PrintLDRs(LightSensor_Values* values);
+void TestMotorDriver(void);
+void ReadAndDisplaySensors(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-/**
- * @brief Print debug message via UART1
- * @param message String message to print
- */
-void PrintDebugMessage(const char* message) {
-    HAL_UART_Transmit(&huart1, (uint8_t*)message, strlen(message), 100);
-}
-
-/**
- * @brief Test GPS data by retrieving and displaying position, time, and coordinates
- */
-void TestGPSData(void) {
-    GPS_Position position;
-    GPS_Time time;
-    ECEF_Position ecef;
-    ECI_Position eci;
-
-    // Print separator for readability
-    PrintDebugMessage("\r\n--------- GPS TEST ---------\r\n");
-
-    // Check if GPS has fix
-    if (GPS_HasFix(&gps_handle)) {
-        PrintDebugMessage("GPS Fix: VALID\r\n");
-
-        // Get and display position
-        if (GPS_GetPosition(&gps_handle, &position) == GPS_OK) {
-            sprintf(debug_buffer, "Latitude: %.6f\r\nLongitude: %.6f\r\nAltitude: %.2f m\r\n",
-                    position.latitude, position.longitude, position.altitude);
-            PrintDebugMessage(debug_buffer);
-
-            sprintf(debug_buffer, "Satellites: %d\r\nHDOP: %.2f\r\n",
-                    position.satellites, position.hdop);
-            PrintDebugMessage(debug_buffer);
-
-            sprintf(debug_buffer, "Speed: %.2f knots\r\nCourse: %.2f degrees\r\n",
-                    position.speed, position.course);
-            PrintDebugMessage(debug_buffer);
-        }
-
-        // Get and display time
-        if (GPS_GetTime(&gps_handle, &time) == GPS_OK) {
-            sprintf(debug_buffer, "UTC Time: %02d/%02d/%04d %02d:%02d:%02d.%03d\r\n",
-                    time.day, time.month, time.year,
-                    time.hour, time.minute, time.second, time.millisecond);
-            PrintDebugMessage(debug_buffer);
-        }
-
-        // Get and display ECEF coordinates
-        if (GPS_GetECEFPosition(&gps_handle, &ecef) == GPS_OK) {
-            sprintf(debug_buffer, "ECEF Position:\r\nX: %.2f m\r\nY: %.2f m\r\nZ: %.2f m\r\n",
-                    ecef.x, ecef.y, ecef.z);
-            PrintDebugMessage(debug_buffer);
-        }
-
-        // Get and display ECI coordinates
-        if (GPS_GetECIPosition(&gps_handle, &eci) == GPS_OK) {
-            sprintf(debug_buffer, "ECI Position:\r\nX: %.2f m\r\nY: %.2f m\r\nZ: %.2f m\r\n",
-                    eci.x, eci.y, eci.z);
-            PrintDebugMessage(debug_buffer);
-
-            sprintf(debug_buffer, "ECI Velocity:\r\nVx: %.2f m/s\r\nVy: %.2f m/s\r\nVz: %.2f m/s\r\n",
-                    eci.vx, eci.vy, eci.vz);
-            PrintDebugMessage(debug_buffer);
-        }
-    } else {
-        PrintDebugMessage("GPS Fix: NO FIX\r\n");
-    }
-
-    PrintDebugMessage("-----------------------------\r\n");
-}
-
-/**
- * @brief Test MPU6050 data by retrieving and displaying accelerometer and gyroscope readings
- */
-void TestMPU6050Data(void) {
-    // Read all data from MPU6050
-    if (MPU6050_ReadAllData(&mpu6050_handle) == MPU6050_OK) {
-        // Print data through debug UART
-        MPU6050_Print(&mpu6050_handle, &huart1);
-
-        // Call motor control update function
-        UpdateMotorControl();
-    } else {
-        PrintDebugMessage("Error reading MPU6050 data\r\n");
-    }
-}
-
-/**
- * @brief Update motor control based on MPU6050 readings
- * This is a simple placeholder for the future PID controller
- */
-void UpdateMotorControl(void) {
-    // Simple proportional control for demonstration purposes
-    // Will be replaced with full PID controller later
-
-    // Use gyro data for motor control (more responsive for orientation control)
-    // X-axis control
-    float x_position = mpu6050_handle.scaledGyro.x;
-
-    // Map gyro readings to PWM values (0-1000)
-    // Note: This is very basic and will be replaced with PID controller
-    if (x_position > 5.0f) {
-        // Tilting right - reduce right motor speed
-        motor_x_pwm = 500 - (uint16_t)((x_position - 5.0f) * 20.0f);
-        if (motor_x_pwm < 0) motor_x_pwm = 0;
-    } else if (x_position < -5.0f) {
-        // Tilting left - increase right motor speed
-        motor_x_pwm = 500 + (uint16_t)((-x_position - 5.0f) * 20.0f);
-        if (motor_x_pwm > 999) motor_x_pwm = 999;
-    } else {
-        // Near level - maintain moderate speed
-        motor_x_pwm = 500;
-    }
-
-    // Y-axis control
-    float y_position = mpu6050_handle.scaledGyro.y;
-
-    // Map gyro readings to PWM values (0-1000)
-    if (y_position > 5.0f) {
-        // Tilting forward - reduce forward motor speed
-        motor_y_pwm = 500 - (uint16_t)((y_position - 5.0f) * 20.0f);
-        if (motor_y_pwm < 0) motor_y_pwm = 0;
-    } else if (y_position < -5.0f) {
-        // Tilting backward - increase forward motor speed
-        motor_y_pwm = 500 + (uint16_t)((-y_position - 5.0f) * 20.0f);
-        if (motor_y_pwm > 999) motor_y_pwm = 999;
-    } else {
-        // Near level - maintain moderate speed
-        motor_y_pwm = 500;
-    }
-
-    // Update PWM channels for motors
-    __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, motor_x_pwm);
-    __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_2, motor_y_pwm);
-
-    // Print motor control values
-    sprintf(debug_buffer, "Motor PWM - X: %d, Y: %d\r\n", motor_x_pwm, motor_y_pwm);
-    PrintDebugMessage(debug_buffer);
-}
 
 /* USER CODE END 0 */
 
@@ -257,73 +120,76 @@ int main(void)
   MX_ADC1_Init();
   MX_USART1_UART_Init();
   MX_TIM4_Init();
-  MX_USART3_UART_Init();
   MX_I2C1_Init();
+  MX_I2C2_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+  LM35_Init(&hadc1);
+  LightSensor_Init(&hadc1);
 
-  // Initialize GPS with UART3 for GPS communication
-  PrintDebugMessage("\r\n\r\nCubeSat System Starting...\r\n");
-
-  // Initialize GPS
-  PrintDebugMessage("Initializing GPS module...\r\n");
-  GPS_Status gps_status = GPS_Init(&gps_handle, &huart3);
-  if (gps_status == GPS_OK) {
-      PrintDebugMessage("GPS Initialized Successfully\r\n");
-  } else {
-      PrintDebugMessage("GPS Initialization Failed\r\n");
+  if (MPU6050_Init(&hmpu, &hi2c1) != MPU6050_OK) {
+      char msg[] = "MPU6050 initialization failed!\r\n";
+      HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+      while(1); // Hang if initialization fails
   }
 
-  // Initialize MPU6050
-  PrintDebugMessage("Initializing MPU6050 module...\r\n");
-  MPU6050_Status mpu_status = MPU6050_Init(&mpu6050_handle, &hi2c1);
-  if (mpu_status == MPU6050_OK) {
-      PrintDebugMessage("MPU6050 Initialized Successfully\r\n");
-
-      // Calibrate MPU6050
-      PrintDebugMessage("Calibrating MPU6050...\r\n");
-      if (MPU6050_Calibrate(&mpu6050_handle, 100) == MPU6050_OK) {
-          PrintDebugMessage("MPU6050 Calibration Complete\r\n");
-      } else {
-          PrintDebugMessage("MPU6050 Calibration Failed\r\n");
-      }
-  } else {
-      PrintDebugMessage("MPU6050 Initialization Failed\r\n");
+  // Calibrate MPU6050 gyroscope (100 samples)
+  if (MPU6050_Calibrate(&hmpu, 100) != MPU6050_OK) {
+      char msg[] = "MPU6050 calibration failed!\r\n";
+      HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
   }
 
-  // Start PWM for motor control
-  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);  // X-axis motor
-  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_2);  // Y-axis motor
+  L298N_InitTypeDef motor_init;
+  motor_init.htim = &htim4;
+  motor_init.channel_a = TIM_CHANNEL_1;
+  motor_init.channel_b = TIM_CHANNEL_2;
+  motor_init.mode = L298N_DUAL_CHANNEL;
+  L298N_Init(&hmotor, &motor_init);
 
-  // Set initial motor speeds to mid-range (500 out of 999)
-  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_1, 500);
-  __HAL_TIM_SET_COMPARE(&htim4, TIM_CHANNEL_2, 500);
+  // Initialize GPS module with UART2
+  if (GPS_Init(&hgps, &huart2) != GPS_OK) {
+    char msg[] = "GPS initialization failed!\r\n";
+    HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+    while(1); // Hang if initialization fails
+  }
+
+  char msg[] = "System initialized. Starting main loop...\r\n";
+  HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    // Process GPS data
-    GPS_Process(&gps_handle);
+	while (1) {
+		   uint32_t current_time = HAL_GetTick();
 
-    // Periodically test and display GPS data
-    uint32_t current_time = HAL_GetTick();
-    if (current_time - last_gps_test_time >= GPS_TEST_INTERVAL) {
-        last_gps_test_time = current_time;
-        TestGPSData();
-    }
+		    // Process GPS data continuously
+		    GPS_Process(&hgps);
 
-    // Periodically test and display MPU6050 data
-    if (current_time - last_mpu_test_time >= MPU6050_TEST_INTERVAL) {
-        last_mpu_test_time = current_time;
-        TestMPU6050Data();
-    }
+		    // Print GPS data using GPS_DebugPrint
+		    if (current_time - last_sensor_read >= SENSOR_READ_INTERVAL) {
+		        last_sensor_read = current_time;
 
+		        // Print GPS information via debug print
+		        GPS_DebugPrint(&hgps, &huart1);
+
+		        // Read and display other sensors
+		        ReadAndDisplaySensors();
+
+		        // Blink LED to show activity
+		        HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+
+		        // Print separator
+		        char separator[] = "----------------------------------\r\n";
+		        HAL_UART_Transmit(&huart1, (uint8_t*)separator, strlen(separator), 100);
+		    }
+
+		    HAL_Delay(10);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-  }
+	}
   /* USER CODE END 3 */
 }
 
@@ -440,6 +306,40 @@ static void MX_I2C1_Init(void)
 }
 
 /**
+  * @brief I2C2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C2_Init(void)
+{
+
+  /* USER CODE BEGIN I2C2_Init 0 */
+
+  /* USER CODE END I2C2_Init 0 */
+
+  /* USER CODE BEGIN I2C2_Init 1 */
+
+  /* USER CODE END I2C2_Init 1 */
+  hi2c2.Instance = I2C2;
+  hi2c2.Init.ClockSpeed = 100000;
+  hi2c2.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c2.Init.OwnAddress1 = 0;
+  hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c2.Init.OwnAddress2 = 0;
+  hi2c2.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C2_Init 2 */
+
+  /* USER CODE END I2C2_Init 2 */
+
+}
+
+/**
   * @brief TIM4 Initialization Function
   * @param None
   * @retval None
@@ -526,35 +426,35 @@ static void MX_USART1_UART_Init(void)
 }
 
 /**
-  * @brief USART3 Initialization Function
+  * @brief USART2 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USART3_UART_Init(void)
+static void MX_USART2_UART_Init(void)
 {
 
-  /* USER CODE BEGIN USART3_Init 0 */
+  /* USER CODE BEGIN USART2_Init 0 */
 
-  /* USER CODE END USART3_Init 0 */
+  /* USER CODE END USART2_Init 0 */
 
-  /* USER CODE BEGIN USART3_Init 1 */
+  /* USER CODE BEGIN USART2_Init 1 */
 
-  /* USER CODE END USART3_Init 1 */
-  huart3.Instance = USART3;
-  huart3.Init.BaudRate = 9600;
-  huart3.Init.WordLength = UART_WORDLENGTH_8B;
-  huart3.Init.StopBits = UART_STOPBITS_1;
-  huart3.Init.Parity = UART_PARITY_NONE;
-  huart3.Init.Mode = UART_MODE_TX_RX;
-  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart3) != HAL_OK)
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 9600;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN USART3_Init 2 */
+  /* USER CODE BEGIN USART2_Init 2 */
 
-  /* USER CODE END USART3_Init 2 */
+  /* USER CODE END USART2_Init 2 */
 
 }
 
@@ -574,13 +474,13 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1|IN1_Pin|GPIO_PIN_15|IN2_Pin
-                          |IN3_Pin|IN4_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, IN1_Pin|GPIO_PIN_15|IN2_Pin|IN3_Pin
+                          |IN4_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PB1 IN1_Pin PB15 IN2_Pin
-                           IN3_Pin IN4_Pin */
-  GPIO_InitStruct.Pin = GPIO_PIN_1|IN1_Pin|GPIO_PIN_15|IN2_Pin
-                          |IN3_Pin|IN4_Pin;
+  /*Configure GPIO pins : IN1_Pin PB15 IN2_Pin IN3_Pin
+                           IN4_Pin */
+  GPIO_InitStruct.Pin = IN1_Pin|GPIO_PIN_15|IN2_Pin|IN3_Pin
+                          |IN4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -591,20 +491,118 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void UART_Print(float value) {
+    char buffer[32];
+    int length = snprintf(buffer, sizeof(buffer), "Temperature: %.2fC\r\n", value);
+    HAL_UART_Transmit(&huart1, (uint8_t*)buffer, length, HAL_MAX_DELAY);
+}
 
-/**
- * @brief UART RX Complete callback
- * @param huart UART handle
- */
+void UART_PrintLDRs(LightSensor_Values* values) {
+    char buffer[64];
+    int length = snprintf(buffer, sizeof(buffer),
+        "LDRs - Front: %4u Right: %4u Back: %4u Left: %4u\r\n",
+        values->front, values->right, values->back, values->left);
+    HAL_UART_Transmit(&huart1, (uint8_t*)buffer, length, HAL_MAX_DELAY);
+}
+
+/* UART RX callback for GPS module */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-  if(huart->Instance == USART3) {
-    // Call GPS driver callback
-    GPS_UART_RxCpltCallback(&gps_handle);
+  if (huart->Instance == USART2) {
+    GPS_UART_RxCpltCallback(&hgps);
   }
 }
 
+void ReadAndDisplaySensors(void)
+{
+    // Read and display temperature
+    temperature = LM35_ReadTemperature(&hadc1);
+    UART_Print(temperature);
+
+    // Read and display all LDR values
+    LightSensor_ReadAll(&hadc1, &ldr_values);
+    UART_PrintLDRs(&ldr_values);
+
+    // Read and display MPU6050 data
+    if (MPU6050_ReadAllData(&hmpu) == MPU6050_OK) {
+        MPU6050_Print(&hmpu, &huart1);
+    } else {
+        char msg[] = "Failed to read MPU6050 data!\r\n";
+        HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+    }
+}
+
+void TestMotorDriver(void)
+{
+  char buffer[64];
+  int length;
+
+  // Print test start message
+  length = snprintf(buffer, sizeof(buffer), "Starting Motor Driver Test\r\n");
+  HAL_UART_Transmit(&huart1, (uint8_t*)buffer, length, HAL_MAX_DELAY);
+
+  // Test 1: Motor A Forward
+  length = snprintf(buffer, sizeof(buffer), "Test 1: Motor A Forward\r\n");
+  HAL_UART_Transmit(&huart1, (uint8_t*)buffer, length, HAL_MAX_DELAY);
+  L298N_SetDirection(&hmotor, MOTOR_A, MOTOR_FORWARD);
+  L298N_SetSpeed(&hmotor, MOTOR_A, 50);  // 50% speed
+  HAL_Delay(2000);  // Run for 2 seconds
+  L298N_StopMotor(&hmotor, MOTOR_A);
+  HAL_Delay(1000);  // Pause between tests
+
+  // Test 2: Motor A Backward
+  length = snprintf(buffer, sizeof(buffer), "Test 2: Motor A Backward\r\n");
+  HAL_UART_Transmit(&huart1, (uint8_t*)buffer, length, HAL_MAX_DELAY);
+  L298N_SetDirection(&hmotor, MOTOR_A, MOTOR_BACKWARD);
+  L298N_SetSpeed(&hmotor, MOTOR_A, 50);
+  HAL_Delay(2000);
+  L298N_StopMotor(&hmotor, MOTOR_A);
+  HAL_Delay(1000);
+
+  // Test 3: Motor B Forward
+  length = snprintf(buffer, sizeof(buffer), "Test 3: Motor B Forward\r\n");
+  HAL_UART_Transmit(&huart1, (uint8_t*)buffer, length, HAL_MAX_DELAY);
+  L298N_SetDirection(&hmotor, MOTOR_B, MOTOR_FORWARD);
+  L298N_SetSpeed(&hmotor, MOTOR_B, 50);
+  HAL_Delay(2000);
+  L298N_StopMotor(&hmotor, MOTOR_B);
+  HAL_Delay(1000);
+
+  // Test 4: Motor B Backward
+  length = snprintf(buffer, sizeof(buffer), "Test 4: Motor B Backward\r\n");
+  HAL_UART_Transmit(&huart1, (uint8_t*)buffer, length, HAL_MAX_DELAY);
+  L298N_SetDirection(&hmotor, MOTOR_B, MOTOR_BACKWARD);
+  L298N_SetSpeed(&hmotor, MOTOR_B, 50);
+  HAL_Delay(2000);
+  L298N_StopMotor(&hmotor, MOTOR_B);
+  HAL_Delay(1000);
+
+  // Test complete
+  length = snprintf(buffer, sizeof(buffer), "Motor Driver Test Complete\r\n");
+  HAL_UART_Transmit(&huart1, (uint8_t*)buffer, length, HAL_MAX_DELAY);
+}
 /* USER CODE END 4 */
+
+/**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM1 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM1) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.
@@ -613,11 +611,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
+	/* User can add his own implementation to report the HAL error return state */
+	__disable_irq();
+	while (1) {
+	}
   /* USER CODE END Error_Handler_Debug */
 }
 
