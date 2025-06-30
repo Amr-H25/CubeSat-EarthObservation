@@ -14,7 +14,7 @@
     "light_sensors": {
       "face_a": 842,
       "face_b": 156,
-      "face_c": 512,
+      "face_c": 102,
       "face_d": 390
     },
     "temperature": 80
@@ -26,8 +26,8 @@
     "current": 0.32,
     "solar_power": 2.1,
     "charging_status": "NOT Charging",
-    "boost_output": 12.0,
-    "temperature": 70
+    "boost_output": 12,
+    "temperature": 50
   },
   "obc": {
     "status": "ONLINE",
@@ -39,11 +39,11 @@
   },
   "comms": {
     "status": "OFFLINE",
-    "rf_link": "STRONG",
+    "rf_link": "MEDIUM",
     "signal_strength": -85,
     "packets_sent": 1000,
     "packets_received": 1198,
-    "last_command": "CAPTURE_IMAGE"
+    "last_command": "STATUS_CHECK"
   },
   "payload": {
     "status": "OFFLINE",
@@ -54,5 +54,8 @@
       "result": "Ocean Surface",
       "confidence": 94.2
     }
-  }
+  },
+  "last_command_button": "STATUS_CHECK",
+  "last_command_time": "2025-06-30T12:18:18.103Z",
+  "command_status": "Sending Command"
 }

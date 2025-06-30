@@ -49,7 +49,6 @@ body {
     -webkit-background-clip: initial;
     -webkit-text-fill-color: initial;
     background-clip: initial;
-    text-fill-color: initial;
     animation: none;
 }
 
@@ -223,6 +222,14 @@ body {
     margin-top: 15px;
 }
 
+/* Add responsive stacking for telemetry charts */
+@media (max-width: 1100px) {
+    .charts-grid {
+        grid-template-columns: 1fr !important;
+        gap: 24px;
+    }
+}
+
 .chart-line {
     position: absolute;
     bottom: 0;
@@ -325,13 +332,6 @@ body {
 
 .telemetry-charts {
     grid-column: 1 / -1;
-}
-
-.charts-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    margin-top: 15px;
 }
 
 .progress-bar {
@@ -550,6 +550,13 @@ body {
     color: #ff8a65 !important; /* soft coral */
 }
 
+/* Add margin below the emergency controls label */
+.panel .controls-grid + div {
+    margin-top: 15px;
+}
+.panel .controls-grid + div > div:first-child {
+    margin-bottom: 8px;
+}
 /* Add margin below the emergency controls label */
 .panel .controls-grid + div {
     margin-top: 15px;

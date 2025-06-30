@@ -8,6 +8,7 @@ const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'];
 
 const app = express();
 app.use(cors());
+app.use(express.json()); // <-- Add this line
 
 // Endpoint to get the latest image filename
 app.get('/latest-image', (req, res) => {
@@ -27,6 +28,27 @@ app.get('/latest-image', (req, res) => {
 
 // Serve images statically
 app.use('/images', express.static(IMAGE_FOLDER));
+
+// Add this endpoint to handle command updates from frontend
+app.post('/api/command', (req, res) => {
+    const newTelemetry = req.body;
+    fs.writeFile(
+        path.join(__dirname, 'telemetry.json'),
+        JSON.stringify(newTelemetry, null, 2),
+        err => {
+            if (err) {
+                res.status(500).json({ error: 'Failed to update telemetry.json' });
+            } else {
+                res.json({ success: true });
+            }
+        }
+    );
+});
+
+// (Optional) Serve telemetry.json for frontend fetches
+app.get('/telemetry.json', (req, res) => {
+    res.sendFile(path.join(__dirname, 'telemetry.json'));
+});
 
 // Start server
 const PORT = 3001;

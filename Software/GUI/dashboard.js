@@ -1,3 +1,8 @@
+// Prevent all forms from submitting and refreshing the page
+document.addEventListener('submit', function(e) {
+    e.preventDefault();
+});
+
 let data = null;
 
 async function loadTelemetry() {
@@ -414,9 +419,27 @@ function updateMapWithTelemetry() {
     }
 }
 
+async function registerCommand(command, status) {
+    try {
+        const res = await fetch('http://localhost:3001/telemetry.json', { cache: "no-store" });
+        const telemetry = await res.json();
+        telemetry.last_command_button = command;
+        telemetry.last_command_time = new Date().toISOString();
+        telemetry.command_status = status;
+        if (telemetry.comms) telemetry.comms.last_command = command;
+        // Use full backend URL for POST
+        await fetch('http://localhost:3001/api/command', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(telemetry)
+        });
+    } catch (e) {
+        // Optionally handle error
+    }
+}
+
 function sendCommand(command) {
     const statusElement = document.getElementById('commandStatus');
-    // Show feedback below command status when button is pressed
     let feedbackElem = document.getElementById('commandFeedback');
     if (!feedbackElem) {
         feedbackElem = document.createElement('div');
@@ -424,40 +447,81 @@ function sendCommand(command) {
         feedbackElem.style.fontSize = '0.9em';
         feedbackElem.style.marginTop = '6px';
         feedbackElem.style.color = '#ccc';
-        // Insert after statusElement, not inside
         statusElement.parentNode.insertBefore(feedbackElem, statusElement.nextSibling);
     }
-    feedbackElem.textContent = `Button "${command}" pressed.`;
 
-    if (command === 'STATUS_CHECK') {
-        statusElement.textContent = `Checking system status...`;
-        statusElement.style.color = '#ffaa00';
-        setTimeout(() => {
-            statusElement.textContent = `Status check complete! All systems nominal.`;
-            statusElement.style.color = '#00ff88';
-            addLogEntry(`Status check performed: All systems nominal.`, 'info');
-            feedbackElem.textContent = '';
-        }, 1000);
-    } else {
-        statusElement.textContent = `Sending ${command} command...`;
-        statusElement.style.color = '#ffaa00';
-        setTimeout(() => {
-            statusElement.textContent = `${command} command sent successfully!`;
-            statusElement.style.color = '#00ff88';
-            addLogEntry(`Command sent: ${command}`, 'info');
-            feedbackElem.textContent = '';
-        }, 1000);
+    // Set status to "Sending Command"
+    registerCommand(command, "Sending Command");
+
+    // Show custom sentences and colors for each button immediately
+    let msg = '';
+    let color = '';
+    switch (command) {
+        case 'RESET':
+            msg = 'System is resetting...';
+            color = '#ffd166';
+            break;
+        case 'CAPTURE':
+            msg = 'Capturing image...';
+            color = '#3ec6ff';
+            break;
+        case 'SYNC':
+            msg = 'Clock is synchronizing...';
+            color = '#43e97b';
+            break;
+        case 'STATUS_CHECK':
+            msg = 'Checking system status...';
+            color = '#ffd166';
+            break;
+        default:
+            msg = `Sending ${command} command...`;
+            color = '#ccc';
     }
+    statusElement.textContent = msg;
+    statusElement.style.color = color;
+
+    // Set status to "Waiting" after a short delay
+    setTimeout(() => {
+        registerCommand(command, "Waiting");
+    }, 200);
+
+    setTimeout(() => {
+        let doneMsg = '';
+        let doneColor = '#00ff88';
+        let success = true;
+        switch (command) {
+            case 'RESET':
+                doneMsg = 'System reset complete!';
+                doneColor = '#43e97b';
+                break;
+            case 'CAPTURE':
+                doneMsg = 'Image captured successfully!';
+                doneColor = '#3ec6ff';
+                break;
+            case 'SYNC':
+                doneMsg = 'Clock synchronized!';
+                doneColor = '#43e97b';
+                break;
+            case 'STATUS_CHECK':
+                doneMsg = 'Status check complete! All systems nominal.';
+                doneColor = '#43e97b';
+                break;
+            default:
+                doneMsg = `${command} command sent successfully!`;
+        }
+        statusElement.textContent = doneMsg;
+        statusElement.style.color = doneColor;
+        feedbackElem.textContent = '';
+        // Set status to "Command Success"
+        registerCommand(command, "Command Success");
+    }, 1200);
 }
 
 function emergencyStop() {
     if (confirm('Are you sure you want to execute EMERGENCY STOP?')) {
-        addLogEntry('EMERGENCY STOP executed by ground control', 'error');
-        document.getElementById('commandStatus').textContent = 'EMERGENCY STOP ACTIVE';
-        document.getElementById('commandStatus').style.color = '#ff4444';
-
-        // Show feedback below command status when button is pressed
-        let statusElement = document.getElementById('commandStatus');
+        const statusElement = document.getElementById('commandStatus');
+        statusElement.textContent = 'EMERGENCY STOP INITIATED!';
+        statusElement.style.color = '#ff6b6b';
         let feedbackElem = document.getElementById('commandFeedback');
         if (!feedbackElem) {
             feedbackElem = document.createElement('div');
@@ -465,10 +529,21 @@ function emergencyStop() {
             feedbackElem.style.fontSize = '0.9em';
             feedbackElem.style.marginTop = '6px';
             feedbackElem.style.color = '#ccc';
-            // Insert after statusElement, not inside
             statusElement.parentNode.insertBefore(feedbackElem, statusElement.nextSibling);
         }
-        feedbackElem.textContent = `Button "EMERGENCY STOP" pressed.`;
+        // Set status to "Sending Command"
+        registerCommand('EMERGENCY_STOP', "Sending Command");
+        setTimeout(() => {
+            // Set status to "Waiting"
+            registerCommand('EMERGENCY_STOP', "Waiting");
+        }, 200);
+        setTimeout(() => {
+            statusElement.textContent = 'EMERGENCY STOP ACTIVE';
+            statusElement.style.color = '#ff4444';
+            feedbackElem.textContent = '';
+            // Set status to "Command Success"
+            registerCommand('EMERGENCY_STOP', "Command Success");
+        }, 1500);
     }
 }
 
@@ -709,8 +784,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ...existing code for browseImageInput...
 });
 
-// Initialize dashboard with telemetry data
-updateDashboardWithTelemetry();
+// Remove or comment out this line:
+// updateDashboardWithTelemetry();
 
 // Add some initial log entries based on telemetry data
 addLogEntry(`System status: ${data.system_status}`, data.system_status === 'OFFLINE' ? 'error' : 'info');
@@ -799,6 +874,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- PAYLOAD IMAGE LOGIC (Browser Only) ---
 document.addEventListener('DOMContentLoaded', () => {
     const browseInput = document.getElementById('browseImageInput');
+    const browseInput2 = document.getElementById('browseImageInput2');
     const imgElem = document.getElementById('payloadImage');
     if (browseInput && imgElem) {
         browseInput.addEventListener('change', (e) => {
@@ -812,4 +888,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+    // Add support for the second browse button
+    if (browseInput2 && imgElem) {
+        browseInput2.addEventListener('change', (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                imgElem.src = url;
+                imgElem.style.width = '100%';
+                imgElem.style.height = '100%';
+                imgElem.style.objectFit = 'contain';
+            }
+        });
+    }
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.control-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.preventDefault();
+        });
+    });
+});
+
+console.log("dashboard.js loaded and sendCommand is global:", typeof window.sendCommand);
