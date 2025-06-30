@@ -1,4 +1,4 @@
-export const data={
+{
   "timestamp": "2024-06-29 15:30:45",
   "system_status": "ONLINE",
   "adcs": {
@@ -13,7 +13,9 @@ export const data={
     },
     "light_sensors": {
       "face_a": 842,
-      "face_b": 156
+      "face_b": 156,
+      "face_c": 512,
+      "face_d": 390
     },
     "temperature": 80
   },
@@ -32,7 +34,7 @@ export const data={
     "data_logging": "NOT ACTIVE",
     "storage_usage": 86,
     "rtc_sync": "OK",
-    "i2c_status": "Connected",
+    "i2c_status": "NOT Connected",
     "command_queue": 3
   },
   "comms": {
@@ -44,7 +46,7 @@ export const data={
     "last_command": "CAPTURE_IMAGE"
   },
   "payload": {
-    "status": "ONLINE",
+    "status": "OFFLINE",
     "payload_status": "CAPTURING",
     "images_today": 47,
     "last_image_size": 2.3,

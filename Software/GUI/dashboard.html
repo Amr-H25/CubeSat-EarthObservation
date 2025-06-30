@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CubeSat Mission Control Dashboard</title>
     <link rel="stylesheet" href="dashboard.css">
-    
+    <!-- Add Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body>
-    <div class="dashboard-container">
+    <div class="dashboard-container" style="box-shadow:0 0 80px 0 rgba(0,212,255,0.12); transition:box-shadow 0.3s;">
         <!-- System Overview Panel -->
         <div class="panel system-overview">
             <div class="panel-header">
@@ -44,23 +45,23 @@
 
             <div class="subsystem-grid">
                 <div class="subsystem-item">
-                    <div><span class="status-indicator status-online" id="adcsStatus"></span>ADCS</div>
-                    <div class="data-label">Attitude Control</div>
+                    <div><span class="status-indicator status-online" id="adcsStatus"></span><strong>ADCS</strong></div>
+                    <div class="data-label">Attitude Determination & Control</div>
                 </div>
                 <div class="subsystem-item">
-                    <div><span class="status-indicator status-online" id="epsStatus"></span>EPS</div>
-                    <div class="data-label">Power System</div>
+                    <div><span class="status-indicator status-online" id="epsStatus"></span><strong>EPS</strong></div>
+                    <div class="data-label">Electrical Power System</div>
                 </div>
                 <div class="subsystem-item">
-                    <div><span class="status-indicator status-online" id="obcStatus"></span>OBC</div>
+                    <div><span class="status-indicator status-online" id="obcStatus"></span><strong>OBC</strong></div>
                     <div class="data-label">Onboard Computer</div>
                 </div>
                 <div class="subsystem-item">
-                    <div><span class="status-indicator status-online" id="commsStatus"></span>COMMS</div>
+                    <div><span class="status-indicator status-online" id="commsStatus"></span><strong>COMMS</strong></div>
                     <div class="data-label">Communications</div>
                 </div>
                 <div class="subsystem-item">
-                    <div><span class="status-indicator status-warning" id="payloadSubsystemStatus"></span>Payload</div>
+                    <div><span class="status-indicator status-warning" id="payloadSubsystemStatus"></span><strong>PAYLOAD</strong></div>
                     <div class="data-label">ESP32-CAM</div>
                 </div>
             </div>
@@ -92,24 +93,35 @@
                 <div>Lon: <span id="longitude">29.9187° E</span></div>
                 <div>Alt: <span id="altitude">408.2 km</span></div>
 
-                <!-- Google Maps-style Location View -->
+                <!-- Live 2D Map (Leaflet) -->
                 <div class="maps-container">
-                    <div class="maps-placeholder">
-                        <div style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 5px; font-size: 0.8rem;">
-                            📍 Giza, Egypt
-                        </div>
-                        <div class="location-marker" style="top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
-                        <div style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); padding: 3px 8px; border-radius: 5px; font-size: 0.7rem;">
-                            Satellite View
-                        </div>
-                        🗺️ Live Position Map
-                    </div>
+                    <div id="map" style="width:100%;height:100%;"></div>
                 </div>
             </div>
             <div style="margin-top: 15px;">
                 <div><strong>Light Sensors:</strong></div>
-                <div>Face A: <span class="data-value" id="lightSensorA">842</span> lux</div>
-                <div>Face B: <span class="data-value" id="lightSensorB">156</span> lux</div>
+                <div class="ldr-grid">
+                    <div class="ldr-item">
+                        <div class="ldr-icon" style="color:#00d4ff;">F</div>
+                        <div class="ldr-value" id="lightSensorF">842</div>
+                        <div class="ldr-label">Front</div>
+                    </div>
+                    <div class="ldr-item">
+                        <div class="ldr-icon" style="color:#00ff88;">B</div>
+                        <div class="ldr-value" id="lightSensorB">156</div>
+                        <div class="ldr-label">Back</div>
+                    </div>
+                    <div class="ldr-item">
+                        <div class="ldr-icon" style="color:#ffaa00;">L</div>
+                        <div class="ldr-value" id="lightSensorL">512</div>
+                        <div class="ldr-label">Left</div>
+                    </div>
+                    <div class="ldr-item">
+                        <div class="ldr-icon" style="color:#ff6b6b;">R</div>
+                        <div class="ldr-value" id="lightSensorR">390</div>
+                        <div class="ldr-label">Right</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -132,12 +144,18 @@
             <div style="margin-top: 15px;">
                 <div>Current: <span class="data-value" id="current">0.32A</span></div>
                 <div>Solar Input: <span class="data-value" id="solarPower">2.1W</span></div>
-                <div>Status: <span style="color: #00ff88;">Charging</span></div>
+                <div>Status: <span id="chargingStatus" class="data-value" style="color: #00ff88;">Charging</span></div>
             </div>
             <div style="margin-top: 15px;">
                 <div><strong>MT3608 Boost:</strong></div>
                 <div>Output: <span class="data-value">12.0V</span></div>
                 <div>Temp (LM35): <span class="data-value" id="temperature">23.5°C</span></div>
+                <div style="margin-top: 5px;">
+                    <div class="progress-bar" id="epsTempBar">
+                        <div id="epsTempFill" class="progress-fill"></div>
+                    </div>
+                    <div id="epsTempWarning" style="display:none"></div>
+                </div>
             </div>
         </div>
 
@@ -148,15 +166,16 @@
                 OBC - Onboard Computer
             </div>
             <div>
-                <div>Data Logging: <span style="color: #00ff88;">ACTIVE</span></div>
+                <div>Data Logging: <span id="dataLogging" class="data-value" style="color: #00ff88;">ACTIVE</span></div>
                 <div>Storage Usage: <span class="data-value" id="storageUsage">67%</span></div>
                 <div class="progress-bar">
                     <div class="progress-fill" id="storageProgress" style="width: 67%"></div>
                 </div>
+                <div id="storageWarning" style="display:none"></div>
             </div>
             <div style="margin-top: 15px;">
-                <div>RTC Sync: <span style="color: #00ff88;">OK</span></div>
-                <div>I2C Status: <span style="color: #00ff88;">Connected</span></div>
+                <div>RTC Sync: <span id="rtcSync" class="data-value" style="color: #00ff88;">OK</span></div>
+                <div>I2C Status: <span id="i2cStatus" class="data-value" style="color: #00ff88;">Connected</span></div>
                 <div>Queue: <span class="data-value" id="commandQueue">3</span> commands</div>
             </div>
             <div style="margin-top: 15px;">
@@ -176,14 +195,31 @@
                 COMMS - Communications
             </div>
             <div>
-                <div>RF Link: <span style="color: #00ff88;">STRONG</span></div>
-                <div>Signal: <span class="data-value" id="signalStrength">-85 dBm</span></div>
-                <div>Packets Sent: <span class="data-value" id="packetsSent">1,247</span></div>
-                <div>Packets Received: <span class="data-value" id="packetsReceived">1,198</span></div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span>RF Link:</span>
+                    <span id="rfLink" class="data-value">STRONG</span>
+                    <span id="rfLinkBars" class="rf-link-bars">
+                        <span class="rf-bar"></span>
+                        <span class="rf-bar"></span>
+                        <span class="rf-bar"></span>
+                    </span>
+                </div>
+                <div>
+                    <span>Signal:</span>
+                    <span id="signalStrength" class="data-value">-85 dBm</span>
+                </div>
+                <div>
+                    <span>Packets Sent:</span>
+                    <span id="packetsSent" class="data-value">1,247</span>
+                </div>
+                <div>
+                    <span>Packets Received:</span>
+                    <span id="packetsReceived" class="data-value">1,198</span>
+                </div>
             </div>
             <div style="margin-top: 15px;">
                 <div><strong>Transmission Queue:</strong></div>
-                <div style="font-size: 0.8rem; color: #ccc;">
+                <div id="transmissionQueue" class="data-label">
                     • Image data (2.3 MB)<br>
                     • Telemetry log (156 KB)<br>
                     • Status report (4 KB)
@@ -191,7 +227,7 @@
             </div>
             <div style="margin-top: 15px;">
                 <div><strong>Ground Commands:</strong></div>
-                <div style="font-size: 0.8rem; color: #00ff88;" id="lastCommand">
+                <div id="lastCommand" class="data-value">
                     Last: "CAPTURE_IMAGE" - 14:23:00
                 </div>
             </div>
@@ -203,10 +239,16 @@
                 <span class="icon">📷</span>
                 Payload - ESP32-CAM
             </div>
-            <div class="image-preview">
-                <div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); padding: 5px; border-radius: 5px; font-size: 0.7rem;">
+            <div class="image-preview" style="position:relative;">
+                <img id="payloadImage" src="" alt="Payload Image" style="width:100%;height:100%;object-fit:contain;position:absolute;top:0;left:0;"/>
+                <div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); padding: 5px; border-radius: 5px; font-size: 0.7rem; z-index:2;">
                     Last: 14:23:12
                 </div>
+                <!-- Styled file input for browsing image -->
+                <label for="browseImageInput" id="browseImageBtn" class="custom-browse-btn" style="position:absolute;bottom:10px;right:10px;z-index:2;">
+                    Browse
+                    <input type="file" id="browseImageInput" accept="image/*" style="display:none;">
+                </label>
             </div>
             <div>
                 <div>Status: <span style="color: #ffaa00;" id="payloadStatus">CAPTURING</span></div>
@@ -230,7 +272,7 @@
                 <button class="control-btn" onclick="sendCommand('RESET')">🔄 Reset System</button>
                 <button class="control-btn secondary" onclick="sendCommand('CAPTURE')">📸 Capture Image</button>
                 <button class="control-btn secondary" onclick="sendCommand('SYNC')">⏱️ Sync Clock</button>
-                <button class="control-btn" onclick="sendCommand('TRANSMIT')">📤 Force TX</button>
+                <button class="control-btn" onclick="sendCommand('STATUS_CHECK')">✅ Status Check</button>
             </div>
             <div style="margin-top: 15px;">
                 <div><strong>Emergency Controls:</strong></div>
@@ -256,22 +298,19 @@
                 <div>
                     <div class="data-label">Battery Voltage (24h)</div>
                     <div class="chart-container">
-                        <div class="chart-line"></div>
-                        <div style="position: absolute; color: #00d4ff; font-size: 0.8rem;">7.4V ↗</div>
+                        <canvas id="batteryVoltageChart"></canvas>
                     </div>
                 </div>
                 <div>
                     <div class="data-label">Temperature (24h)</div>
                     <div class="chart-container">
-                        <div class="chart-line" style="background: linear-gradient(to top, transparent, #ff6b6b);"></div>
-                        <div style="position: absolute; color: #ff6b6b; font-size: 0.8rem;">23.5°C ↘</div>
+                        <canvas id="temperatureChart"></canvas>
                     </div>
                 </div>
                 <div>
                     <div class="data-label">Packet Success Rate</div>
                     <div class="chart-container">
-                        <div class="chart-line" style="background: linear-gradient(to top, transparent, #00ff88);"></div>
-                        <div style="position: absolute; color: #00ff88; font-size: 0.8rem;">96.1% ↗</div>
+                        <canvas id="packetSuccessChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -296,6 +335,10 @@
         </div>
     </div>
 
+    <!-- Add Leaflet JS before dashboard.js -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <!-- Add Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="dashboard.js" type="module"></script>
 </body>
 </html>
