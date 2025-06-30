@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CubeSat Mission Control Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+    
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- System Overview Panel -->
+        <div class="panel system-overview">
+            <div class="panel-header">
+                <span class="icon">🛰️</span>
+                CubeSat Mission Control - System Overview
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div><span class="status-indicator status-online" id="systemStatusIndicator"></span>Status: <strong id="systemStatusText">ONLINE</strong></div>
+                    <div style="margin-top: 10px;">Last Update: <span id="lastUpdate">2024-06-27 14:23:45 UTC</span></div>
+                    <div>Last Transmission: <span id="lastTransmission">2024-06-27 14:23:12 UTC</span></div>
+                </div>
+                <div class="cubesat-viz"></div>
+            </div>
+
+            <!-- Overview Graphs -->
+            <div class="overview-graphs">
+                <div class="mini-graph">
+                    <div style="font-weight: bold; margin-bottom: 5px;">Battery Level</div>
+                    <div class="graph-value" id="batteryPercentage">85%</div>
+                    <div class="mini-chart">
+                        <div class="battery-bar" id="batteryBar" style="width: 85%"></div>
+                    </div>
+                </div>
+                <div class="mini-graph">
+                    <div style="font-weight: bold; margin-bottom: 5px;">System Temperature</div>
+                    <div class="graph-value" id="systemTemp">23.5°C</div>
+                    <div class="mini-chart">
+                        <div class="temp-line"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsystem-grid">
+                <div class="subsystem-item">
+                    <div><span class="status-indicator status-online" id="adcsStatus"></span>ADCS</div>
+                    <div class="data-label">Attitude Control</div>
+                </div>
+                <div class="subsystem-item">
+                    <div><span class="status-indicator status-online" id="epsStatus"></span>EPS</div>
+                    <div class="data-label">Power System</div>
+                </div>
+                <div class="subsystem-item">
+                    <div><span class="status-indicator status-online" id="obcStatus"></span>OBC</div>
+                    <div class="data-label">Onboard Computer</div>
+                </div>
+                <div class="subsystem-item">
+                    <div><span class="status-indicator status-online" id="commsStatus"></span>COMMS</div>
+                    <div class="data-label">Communications</div>
+                </div>
+                <div class="subsystem-item">
+                    <div><span class="status-indicator status-warning" id="payloadSubsystemStatus"></span>Payload</div>
+                    <div class="data-label">ESP32-CAM</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADCS Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <span class="icon">🧭</span>
+                ADCS - Attitude Control
+            </div>
+            <div class="attitude-display">
+                <div class="attitude-item">
+                    <div class="data-value" id="pitch">+12.3°</div>
+                    <div class="data-label">Pitch</div>
+                </div>
+                <div class="attitude-item">
+                    <div class="data-value" id="roll">-5.7°</div>
+                    <div class="data-label">Roll</div>
+                </div>
+                <div class="attitude-item">
+                    <div class="data-value" id="yaw">+89.2°</div>
+                    <div class="data-label">Yaw</div>
+                </div>
+            </div>
+            <div style="margin-top: 15px;">
+                <div><strong>GPS Position:</strong></div>
+                <div>Lat: <span id="latitude">31.2001° N</span></div>
+                <div>Lon: <span id="longitude">29.9187° E</span></div>
+                <div>Alt: <span id="altitude">408.2 km</span></div>
+
+                <!-- Google Maps-style Location View -->
+                <div class="maps-container">
+                    <div class="maps-placeholder">
+                        <div style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); padding: 5px 10px; border-radius: 5px; font-size: 0.8rem;">
+                            📍 Giza, Egypt
+                        </div>
+                        <div class="location-marker" style="top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+                        <div style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.7); padding: 3px 8px; border-radius: 5px; font-size: 0.7rem;">
+                            Satellite View
+                        </div>
+                        🗺️ Live Position Map
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 15px;">
+                <div><strong>Light Sensors:</strong></div>
+                <div>Face A: <span class="data-value" id="lightSensorA">842</span> lux</div>
+                <div>Face B: <span class="data-value" id="lightSensorB">156</span> lux</div>
+            </div>
+        </div>
+
+        <!-- EPS Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <span class="icon">🔋</span>
+                EPS - Power System
+            </div>
+            <div>
+                <div class="data-value" id="batteryVoltage">7.4V</div>
+                <div class="data-label">Battery Voltage</div>
+                <div>
+                    <div style="font-size: 1.2rem; font-weight: bold; color: #00ff88; margin: 10px 0;" id="batteryPercent">85%</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="batteryProgress" style="width: 85%"></div>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 15px;">
+                <div>Current: <span class="data-value" id="current">0.32A</span></div>
+                <div>Solar Input: <span class="data-value" id="solarPower">2.1W</span></div>
+                <div>Status: <span style="color: #00ff88;">Charging</span></div>
+            </div>
+            <div style="margin-top: 15px;">
+                <div><strong>MT3608 Boost:</strong></div>
+                <div>Output: <span class="data-value">12.0V</span></div>
+                <div>Temp (LM35): <span class="data-value" id="temperature">23.5°C</span></div>
+            </div>
+        </div>
+
+        <!-- OBC Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <span class="icon">💾</span>
+                OBC - Onboard Computer
+            </div>
+            <div>
+                <div>Data Logging: <span style="color: #00ff88;">ACTIVE</span></div>
+                <div>Storage Usage: <span class="data-value" id="storageUsage">67%</span></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="storageProgress" style="width: 67%"></div>
+                </div>
+            </div>
+            <div style="margin-top: 15px;">
+                <div>RTC Sync: <span style="color: #00ff88;">OK</span></div>
+                <div>I2C Status: <span style="color: #00ff88;">Connected</span></div>
+                <div>Queue: <span class="data-value" id="commandQueue">3</span> commands</div>
+            </div>
+            <div style="margin-top: 15px;">
+                <div><strong>Last Commands:</strong></div>
+                <div style="font-size: 0.8rem; color: #ccc;">
+                    14:23:12 - Image capture<br>
+                    14:22:45 - Telemetry sync<br>
+                    14:22:01 - System health check
+                </div>
+            </div>
+        </div>
+
+        <!-- COMMS Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <span class="icon">📡</span>
+                COMMS - Communications
+            </div>
+            <div>
+                <div>RF Link: <span style="color: #00ff88;">STRONG</span></div>
+                <div>Signal: <span class="data-value" id="signalStrength">-85 dBm</span></div>
+                <div>Packets Sent: <span class="data-value" id="packetsSent">1,247</span></div>
+                <div>Packets Received: <span class="data-value" id="packetsReceived">1,198</span></div>
+            </div>
+            <div style="margin-top: 15px;">
+                <div><strong>Transmission Queue:</strong></div>
+                <div style="font-size: 0.8rem; color: #ccc;">
+                    • Image data (2.3 MB)<br>
+                    • Telemetry log (156 KB)<br>
+                    • Status report (4 KB)
+                </div>
+            </div>
+            <div style="margin-top: 15px;">
+                <div><strong>Ground Commands:</strong></div>
+                <div style="font-size: 0.8rem; color: #00ff88;" id="lastCommand">
+                    Last: "CAPTURE_IMAGE" - 14:23:00
+                </div>
+            </div>
+        </div>
+
+        <!-- Payload Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <span class="icon">📷</span>
+                Payload - ESP32-CAM
+            </div>
+            <div class="image-preview">
+                <div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); padding: 5px; border-radius: 5px; font-size: 0.7rem;">
+                    Last: 14:23:12
+                </div>
+            </div>
+            <div>
+                <div>Status: <span style="color: #ffaa00;" id="payloadStatus">CAPTURING</span></div>
+                <div>Images Today: <span class="data-value" id="imagesCount">47</span></div>
+                <div>Last Size: <span class="data-value" id="imageSize">2.3 MB</span></div>
+            </div>
+            <div style="margin-top: 15px;">
+                <div><strong>AI Classification:</strong></div>
+                <div>Result: <span style="color: #00ff88;" id="aiResult">Ocean Surface</span></div>
+                <div>Confidence: <span class="data-value" id="aiConfidence">94.2%</span></div>
+            </div>
+        </div>
+
+        <!-- Controls Panel -->
+        <div class="panel">
+            <div class="panel-header">
+                <span class="icon">🛠️</span>
+                Ground Controls
+            </div>
+            <div class="controls-grid">
+                <button class="control-btn" onclick="sendCommand('RESET')">🔄 Reset System</button>
+                <button class="control-btn secondary" onclick="sendCommand('CAPTURE')">📸 Capture Image</button>
+                <button class="control-btn secondary" onclick="sendCommand('SYNC')">⏱️ Sync Clock</button>
+                <button class="control-btn" onclick="sendCommand('TRANSMIT')">📤 Force TX</button>
+            </div>
+            <div style="margin-top: 15px;">
+                <div><strong>Emergency Controls:</strong></div>
+                <button class="control-btn" style="width: 100%; background: linear-gradient(135deg, #ff4444, #cc0000);" onclick="emergencyStop()">
+                    🚨 EMERGENCY STOP
+                </button>
+            </div>
+            <div style="margin-top: 15px;">
+                <div><strong>Command Status:</strong></div>
+                <div id="commandStatus" style="font-size: 0.8rem; color: #00ff88;">
+                    Ready to send commands...
+                </div>
+            </div>
+        </div>
+
+        <!-- Telemetry Charts -->
+        <div class="panel telemetry-charts">
+            <div class="panel-header">
+                <span class="icon">📈</span>
+                Telemetry Charts
+            </div>
+            <div class="charts-grid">
+                <div>
+                    <div class="data-label">Battery Voltage (24h)</div>
+                    <div class="chart-container">
+                        <div class="chart-line"></div>
+                        <div style="position: absolute; color: #00d4ff; font-size: 0.8rem;">7.4V ↗</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="data-label">Temperature (24h)</div>
+                    <div class="chart-container">
+                        <div class="chart-line" style="background: linear-gradient(to top, transparent, #ff6b6b);"></div>
+                        <div style="position: absolute; color: #ff6b6b; font-size: 0.8rem;">23.5°C ↘</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="data-label">Packet Success Rate</div>
+                    <div class="chart-container">
+                        <div class="chart-line" style="background: linear-gradient(to top, transparent, #00ff88);"></div>
+                        <div style="position: absolute; color: #00ff88; font-size: 0.8rem;">96.1% ↗</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Console -->
+        <div class="panel" style="grid-column: 1 / -1;">
+            <div class="panel-header">
+                <span class="icon">📋</span>
+                System Log Console
+            </div>
+            <div class="log-console" id="logConsole">
+                <div class="log-entry log-info">[14:23:45] INFO: Telemetry data transmitted successfully</div>
+                <div class="log-entry log-info">[14:23:32] INFO: Image capture completed - 2.3MB saved</div>
+                <div class="log-entry log-warning">[14:23:28] WARN: Payload subsystem temperature elevated (45.2°C)</div>
+                <div class="log-entry log-info">[14:23:12] INFO: Ground command received: CAPTURE_IMAGE</div>
+                <div class="log-entry log-info">[14:22:58] INFO: ADCS stabilization achieved</div>
+                <div class="log-entry log-info">[14:22:45] INFO: Battery charging at 0.32A</div>
+                <div class="log-entry log-error">[14:22:31] ERROR: Temporary I2C communication timeout - recovered</div>
+                <div class="log-entry log-info">[14:22:15] INFO: System health check passed</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="dashboard.js" type="module"></script>
+</body>
+</html>
