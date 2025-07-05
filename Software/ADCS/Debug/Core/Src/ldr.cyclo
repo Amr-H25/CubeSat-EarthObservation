@@ -1,4 +1,0 @@
-../Core/Src/ldr.c:19:6:LightSensor_Init	1
-../Core/Src/ldr.c:33:10:LightSensor_ReadSingle	1
-../Core/Src/ldr.c:56:6:LightSensor_ReadAll	1
-../Core/Src/ldr.c:64:22:LightSensor_GetMaxLight	4
