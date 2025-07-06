@@ -1,0 +1,22 @@
+16:46:23 **** Build of configuration Debug for project ADCS ****
+make -j8 all 
+arm-none-eabi-gcc -o "ADCS.elf" @"objects.list"   -mcpu=cortex-m3 -T"D:\University\Graduation Prpject\Software\CubeSat-EarthObservation\Software\SubSystems Software\ADCS\STM32F103C8TX_FLASH.ld" --specs=nosys.specs -Wl,-Map="ADCS.map" -Wl,--gc-sections -static -u _printf_float --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: ADCS.elf
+ 
+arm-none-eabi-size  ADCS.elf 
+arm-none-eabi-objdump -h -S ADCS.elf  > "ADCS.list"
+arm-none-eabi-objcopy  -O ihex ADCS.elf  "ADCS.hex"
+   text	   data	    bss	    dec	    hex	filename
+  44704	    476	   3416	  48596	   bdd4	ADCS.elf
+arm-none-eabi-objcopy  -O binary ADCS.elf  "ADCS.bin"
+Finished building: default.size.stdout
+ 
+Finished building: ADCS.bin
+ 
+Finished building: ADCS.hex
+ 
+Finished building: ADCS.list
+ 
+
+16:46:25 Build Finished. 0 errors, 0 warnings. (took 1s.835ms)
+

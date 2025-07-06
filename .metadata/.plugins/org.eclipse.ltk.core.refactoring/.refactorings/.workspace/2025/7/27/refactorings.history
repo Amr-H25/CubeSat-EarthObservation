@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">&#x0A;<refactoring comment="Rename resource &apos;ADCS_Drivers&apos; to &apos;ADCS&apos;" description="Rename resource &apos;ADCS_Drivers&apos;" flags="7" id="org.eclipse.ltk.core.refactoring.rename.resource" input="/ADCS_Drivers" name="ADCS" stamp="1751722982186" updateReferences="true"/>&#x0A;<refactoring comment="Delete resource &apos;ADCS&apos;" deleteContents="false" description="Delete resource &apos;ADCS&apos;" element1="/ADCS" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1751723161823"/>
+</session>
