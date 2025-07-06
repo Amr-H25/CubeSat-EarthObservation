@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payload Image Classification Flow</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .flowchart-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        .title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 50px;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+        
+        .flow-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 40px 0;
+            position: relative;
+            gap: 60px;
+        }
+        
+        .component {
+            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #00d4ff;
+            box-shadow: 0 10px 25px rgba(0, 212, 255, 0.2);
+            color: white;
+            position: relative;
+            transition: all 0.3s ease;
+            width: 250px;
+            height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 212, 255, 0.3);
+        }
+        
+        .payload-block {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            border-color: #ff6b6b;
+        }
+        
+        .classification-block {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);
+            border-color: #4ecdc4;
+        }
+        
+        .gui-block {
+            background: linear-gradient(135deg, #a8e6cf 0%, #7fcdcd 100%);
+            border-color: #a8e6cf;
+        }
+        
+        .arrow-horizontal {
+            position: absolute;
+            top: 50%;
+            right: -60px;
+            transform: translateY(-50%);
+            font-size: 40px;
+            font-weight: bold;
+            color: #00d4ff;
+            animation: pulse 2s infinite;
+            z-index: 10;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.8);
+            width: 50px;
+            text-align: center;
+        }
+        
+        .component-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        .component-description {
+            font-size: 14px;
+            line-height: 1.4;
+            opacity: 0.9;
+        }
+        
+        .process-details {
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        
+        .detail-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            flex: 1;
+            color: white;
+        }
+        
+        .detail-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .detail-icon {
+            font-size: 20px;
+            margin-right: 10px;
+        }
+        
+        .detail-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 10px;
+            margin: 8px 0;
+            font-size: 13px;
+            border-left: 3px solid #00d4ff;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .legend {
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .legend-color {
+            width: 25px;
+            height: 25px;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="flowchart-container">
+        <div class="title">Payload Image Classification System</div>
+        
+        <!-- Main Flow -->
+        <div class="flow-row">
+            <div class="component payload-block">
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <div style="font-size: 30px; margin-bottom: 10px;">📸</div>
+                    <div class="component-title">Payload System</div>
+                    <div class="component-description">
+                        Captures Earth images and stores them in dedicated folder
+                    </div>
+                </div>
+                <div class="arrow-horizontal">→</div>
+            </div>
+            
+            <div class="component classification-block">
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <div style="font-size: 30px; margin-bottom: 10px;">🤖</div>
+                    <div class="component-title">Classification Model</div>
+                    <div class="component-description">
+                        Monitors folder, processes latest image, and categorizes content
+                    </div>
+                </div>
+                <div class="arrow-horizontal">→</div>
+            </div>
+            
+            <div class="component gui-block">
+                <div style="display: flex; flex-direction: column; align-items: center;">
+                    <div style="font-size: 30px; margin-bottom: 10px;">🖥️</div>
+                    <div class="component-title">GUI Display</div>
+                    <div class="component-description">
+                        Displays both image and classification result to user
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Process Details -->
+        <div class="process-details">
+            <div class="detail-card">
+                <div class="detail-title">
+                    <span class="detail-icon">📷</span>
+                    Image Capture
+                </div>
+                <div class="detail-item">Camera captures Earth surface</div>
+                <div class="detail-item">Images saved to dedicated folder</div>
+                <div class="detail-item">Automatic file organization</div>
+            </div>
+            
+            <div class="detail-card">
+                <div class="detail-title">
+                    <span class="detail-icon">🧠</span>
+                    AI Classification
+                </div>
+                <div class="detail-item">Folder monitoring system</div>
+                <div class="detail-item">Latest image processing</div>
+                <div class="detail-item">Content categorization:
+                    <br>• Water bodies
+                    <br>• Desert areas
+                    <br>• Agricultural land
+                </div>
+            </div>
+            
+            <div class="detail-card">
+                <div class="detail-title">
+                    <span class="detail-icon">📊</span>
+                    User Interface
+                </div>
+                <div class="detail-item">Real-time image display</div>
+                <div class="detail-item">Classification results</div>
+                <div class="detail-item">Interactive visualization</div>
+            </div>
+        </div>
+        
+        <!-- Legend -->
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);"></div>
+                Payload System
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 100%);"></div>
+                Classification Model
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: linear-gradient(135deg, #a8e6cf 0%, #7fcdcd 100%);"></div>
+                GUI Display
+            </div>
+        </div>
+    </div>
+</body>
+</html>
