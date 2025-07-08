@@ -17,12 +17,12 @@
       "face_c": 102,
       "face_d": 390
     },
-    "temperature": 80
+    "temperature": 30
   },
   "eps": {
     "status": "OFFLINE",
     "battery_voltage": 7.4,
-    "battery_percentage": 22,
+    "battery_percentage": 26,
     "current": 0.32,
     "solar_power": 2.1,
     "charging_status": "NOT Charging",
@@ -43,7 +43,7 @@
     "signal_strength": -85,
     "packets_sent": 1000,
     "packets_received": 1198,
-    "last_command": "STATUS_CHECK"
+    "last_command": "RESET"
   },
   "payload": {
     "status": "OFFLINE",
@@ -55,7 +55,7 @@
       "confidence": 94.2
     }
   },
-  "last_command_button": "STATUS_CHECK",
-  "last_command_time": "2025-06-30T12:18:18.103Z",
+  "last_command_button": "RESET",
+  "last_command_time": "2025-07-07T13:02:10.523Z",
   "command_status": "Sending Command"
 }

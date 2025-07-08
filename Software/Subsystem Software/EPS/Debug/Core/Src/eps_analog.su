@@ -1,0 +1,6 @@
+../Core/Src/eps_analog.c:32:6:EPS_Analog_Init	16	static
+../Core/Src/eps_analog.c:40:19:EPS_ReadAllChannels	16	static
+../Core/Src/eps_analog.c:64:10:EPS_ReadRawADC	32	static
+../Core/Src/eps_analog.c:87:7:EPS_ConvertToVoltage	16	static
+../Core/Src/eps_analog.c:93:6:EPS_PowerControl	24	static
+../Core/Src/eps_analog.c:103:6:EPS_PowerControlAll	24	static

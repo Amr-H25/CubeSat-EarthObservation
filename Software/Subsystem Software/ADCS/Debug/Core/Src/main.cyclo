@@ -1,0 +1,9 @@
+../Core/Src/main.c:200:6:SystemClock_Config	4
+../Core/Src/main.c:494:6:UART_Print	1
+../Core/Src/main.c:500:6:UART_PrintLDRs	1
+../Core/Src/main.c:509:6:HAL_UART_RxCpltCallback	2
+../Core/Src/main.c:516:6:ReadAndDisplaySensors	3
+../Core/Src/main.c:95:5:main	19
+../Core/Src/main.c:535:6:TestMotorDriver	1
+../Core/Src/main.c:594:6:HAL_TIM_PeriodElapsedCallback	2
+../Core/Src/main.c:611:6:Error_Handler	1

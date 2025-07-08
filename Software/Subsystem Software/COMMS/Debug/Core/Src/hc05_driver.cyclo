@@ -1,0 +1,16 @@
+../Core/Src/hc05_driver.c:37:13:QueueCommand	2
+../Core/Src/hc05_driver.c:49:13:DequeueCommand	2
+../Core/Src/hc05_driver.c:60:18:BT_Init	2
+../Core/Src/hc05_driver.c:79:18:BT_SendJSON	4
+../Core/Src/hc05_driver.c:119:18:BT_SendRaw	3
+../Core/Src/hc05_driver.c:137:23:BT_GetCommunicationState	1
+../Core/Src/hc05_driver.c:141:6:BT_ErrorHandler	1
+../Core/Src/hc05_driver.c:161:6:BT_IsCommandReceived	3
+../Core/Src/hc05_driver.c:166:6:BT_ClearCommandFlag	1
+../Core/Src/hc05_driver.c:172:18:BT_ReceiveCommand	8
+../Core/Src/hc05_driver.c:211:6:BT_UpdateTelemetryData	1
+../Core/Src/hc05_driver.c:225:6:BT_GenerateJSONString	1
+../Core/Src/hc05_driver.c:297:6:BT_ShouldBlinkLED	1
+../Core/Src/hc05_driver.c:302:6:HAL_UART_TxCpltCallback	3
+../Core/Src/hc05_driver.c:318:6:HAL_UART_RxCpltCallback	10
+../Core/Src/hc05_driver.c:372:6:HAL_UART_ErrorCallback	2
